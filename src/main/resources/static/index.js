@@ -1,10 +1,11 @@
 const {
-    RSocketClient,
+    RSocketConnector,
     JsonSerializer,
     IdentitySerializer
 } = require('rsocket-core');
-const RSocketWebSocketClient = require('rsocket-websocket-client').default;
-var client = undefined;
+const { WebsocketClientTransport } = require("rsocket-websocket-client"); //.default
+let client = undefined;
+let rsocket = undefined;
 
 function addErrorMessage(prefix, error) {
     var ul = document.getElementById("messages");
@@ -21,14 +22,14 @@ function addMessage(message) {
     ul.appendChild(li);
 }
 
-function main() {
-    if (client !== undefined) {
-        client.close();
+async function main() {
+    if (rsocket !== undefined) {
+        rsocket.close();
         document.getElementById("messages").innerHTML = "";
     }
 
     // Create an instance of a client
-    client = new RSocketClient({
+    client = new RSocketConnector({
         serializers: {
             data: JsonSerializer,
             metadata: IdentitySerializer
@@ -43,43 +44,37 @@ function main() {
             // format of `metadata`
             metadataMimeType: 'message/x.rsocket.routing.v0',
         },
-        transport: new RSocketWebSocketClient({
+        transport: new WebsocketClientTransport({
             url: 'ws://localhost:7000/tweetsocket'
         }),
     });
 
-    // Open the connection
-    client.connect().subscribe({
-        onComplete: socket => {
-            // socket provides the rsocket interactions fire/forget, request/response,
-            // request/stream, etc as well as methods to close the socket.
-            socket.requestStream({
-                data: {
-                    'author': document.getElementById("author-filter").value
-                },
-                metadata: String.fromCharCode('tweets.by.author'.length) + 'tweets.by.author',
-            }).subscribe({
-                onComplete: () => console.log('complete'),
+    rsocket = await client.connect();
+    await new Promise((resolve, reject) =>
+    {
+        let payloadData = { author: document.getElementById("author-filter").value };
+        // socket provides the rsocket interactions fire/forget, request/response,
+        // request/stream, etc as well as methods to close the socket.
+        const requester = rsocket.requestStream(
+            {
+                data: Buffer.from(JSON.stringify(payloadData)),
+                metadata: Buffer.from(String.fromCharCode('tweets.by.author'.length) + 'tweets.by.author'),
+            },
+            1,
+            {
                 onError: error => {
                     console.log(error);
                     addErrorMessage("Connection has been closed due to ", error);
                 },
                 onNext: payload => {
-                    console.log(payload.data);
-                    addMessage(payload.data);
+                    console.log(payload.data.toString());
+                    addMessage(JSON.parse(payload.data.toString()));
+                    requester.request(1);
                 },
                 onSubscribe: subscription => {
                     subscription.request(2147483647);
-                },
+                }
             });
-        },
-        onError: error => {
-            console.log(error);
-            addErrorMessage("Connection has been refused due to ", error);
-        },
-        onSubscribe: cancel => {
-            /* call cancel() to abort */
-        }
     });
 }
 
