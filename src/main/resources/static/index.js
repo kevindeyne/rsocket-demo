@@ -24,7 +24,7 @@ function addMessage(message) {
 
 async function main() {
     if (rsocket !== undefined) {
-        rsocket.close();
+        //rsocket.close();
         document.getElementById("messages").innerHTML = "";
     }
 
@@ -55,12 +55,13 @@ async function main() {
         let payloadData = { author: document.getElementById("author-filter").value };
         // socket provides the rsocket interactions fire/forget, request/response,
         // request/stream, etc as well as methods to close the socket.
-        const requester = rsocket.requestStream(
+        const requester = rsocket.requestChannel(
             {
                 data: Buffer.from(JSON.stringify(payloadData)),
                 metadata: Buffer.from(String.fromCharCode('tweets.by.author'.length) + 'tweets.by.author'),
             },
             1,
+            false,
             {
                 onError: error => {
                     console.log(error);
@@ -69,10 +70,10 @@ async function main() {
                 onNext: payload => {
                     console.log(payload.data.toString());
                     addMessage(JSON.parse(payload.data.toString()));
-                    requester.request(1);
+                    //requester.request(1);
                 },
                 onSubscribe: subscription => {
-                    subscription.request(2147483647);
+                    //subscription.request(2147483647);
                 }
             });
     });

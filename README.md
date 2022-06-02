@@ -5,6 +5,7 @@ Needs npm and browserify to build. Once built, does not need npm. Basically we n
 You run the following commands:
 - Go to src\main\resources\static
 - Run "npm install"
-- Run "browserify index.js > websocket.js"
+- Run "browserify -g uglifyify ./index.js > websocket.js"
+- OR during DEV: Run "browserify ./index.js > websocket.js"
 
 The final result is a websocket.js, which is what can be embedded in the jar. 

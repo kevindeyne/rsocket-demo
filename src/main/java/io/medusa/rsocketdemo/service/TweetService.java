@@ -19,10 +19,8 @@ public class TweetService {
         }
     };
 
-    public Flux<Tweet> getByAuthor(String author) {
-        return Flux
-                .interval(Duration.ZERO, Duration.ofSeconds(1))
-                .map(i -> Tweet.of(tweets.get(author)));
+    public Tweet getByAuthor(String author) {
+        return Tweet.of(tweets.get(author));
     }
 
 }

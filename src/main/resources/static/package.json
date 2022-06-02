@@ -9,13 +9,11 @@
   },
   "license": "BSD-3-Clause",
   "dependencies": {
-    "fbjs": "^3.0.4",
     "rsocket-core": "^1.0.0-alpha.1",
     "rsocket-flowable": "^0.0.27",
-    "rsocket-tcp-server": "^1.0.0-alpha.1",
-    "rsocket-types": "^0.0.27",
     "rsocket-websocket-client": "^1.0.0-alpha.1",
-    "rsocket-websocket-server": "^1.0.0-alpha.1",
+    "rsocket-types": "^0.0.27",
+    "uglifyify": "^5.0.2",
     "ws": "^5.2.1"
   }
 }

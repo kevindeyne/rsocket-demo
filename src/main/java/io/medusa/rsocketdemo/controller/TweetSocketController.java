@@ -17,8 +17,8 @@ public class TweetSocketController {
     }
 
     @MessageMapping("tweets.by.author")
-    public Flux<Tweet> getByAuthor(TweetRequest request) {
-        return service.getByAuthor(request.getAuthor());
+    public Flux<Tweet> getByAuthor(final Flux<TweetRequest> request) {
+        return request.map(r -> service.getByAuthor(r.getAuthor()));
     }
 
 }
