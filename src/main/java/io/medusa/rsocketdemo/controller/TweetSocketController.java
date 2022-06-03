@@ -6,6 +6,7 @@ import io.medusa.rsocketdemo.service.TweetService;
 import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import reactor.core.publisher.Flux;
 
@@ -20,6 +21,7 @@ public class TweetSocketController {
         this.service = service;
     }
 
+    @PreAuthorize("hasRole('USER')")
     @MessageMapping("tweets.by.author")
     public Flux<Tweet> getByAuthor(final @Headers Map<String, Object> metadata, @Payload final Flux<TweetRequest> request) {
         return request.log().map(r -> {

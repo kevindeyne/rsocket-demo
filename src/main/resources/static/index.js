@@ -55,7 +55,6 @@ async function main() {
         const map = new Map();
         map.set(WellKnownMimeType.MESSAGE_RSOCKET_ROUTING, encodedRoute);
         map.set(WellKnownMimeType.MESSAGE_RSOCKET_AUTHENTICATION, encodeSimpleAuthMetadata("user", "pass"));
-        //map.set(WellKnownMimeType.TEXT_PLAIN, Buffer.from("hello-world-123"));
         const compositeMetaData = encodeCompositeMetadata(map);
 
         let payloadData = { author: document.getElementById("author-filter").value };
