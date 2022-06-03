@@ -1,12 +1,16 @@
 package io.medusa.rsocketdemo.model;
 
+import java.util.Map;
+
 public class TweetRequest {
     private String author;
+    private Map<String, Object> metadata;
 
     public TweetRequest() {}
 
-    public TweetRequest(String author) {
+    public TweetRequest(String author, Map<String, Object> metadata) {
         this.author = author;
+        this.metadata = metadata;
     }
 
     public String getAuthor() {
@@ -17,4 +21,11 @@ public class TweetRequest {
         this.author = author;
     }
 
+    public Map<String, Object> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata;
+    }
 }

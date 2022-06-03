@@ -1,9 +1,12 @@
+const { RSocketConnector } = require("rsocket-core");
+const { WebsocketClientTransport } = require("rsocket-websocket-client");
 const {
-    RSocketConnector,
-    JsonSerializer,
-    IdentitySerializer
-} = require('rsocket-core');
-const { WebsocketClientTransport } = require("rsocket-websocket-client"); //.default
+    encodeCompositeMetadata,
+    encodeRoute,
+    WellKnownMimeType,
+    encodeSimpleAuthMetadata,
+} = require("rsocket-composite-metadata");
+
 let client = undefined;
 let rsocket = undefined;
 
@@ -30,19 +33,15 @@ async function main() {
 
     // Create an instance of a client
     client = new RSocketConnector({
-        serializers: {
-            data: JsonSerializer,
-            metadata: IdentitySerializer
-        },
         setup: {
             // ms btw sending keepalive to server
             keepAlive: 60000,
             // ms timeout if no keepalive response
             lifetime: 180000,
             // format of `data`
-            dataMimeType: 'application/json',
+            dataMimeType: WellKnownMimeType.APPLICATION_JSON.string,
             // format of `metadata`
-            metadataMimeType: 'message/x.rsocket.routing.v0',
+            metadataMimeType: WellKnownMimeType.MESSAGE_RSOCKET_COMPOSITE_METADATA.string,
         },
         transport: new WebsocketClientTransport({
             url: 'ws://localhost:7000/tweetsocket'
@@ -50,32 +49,38 @@ async function main() {
     });
 
     rsocket = await client.connect();
-    await new Promise((resolve, reject) =>
-    {
+    await new Promise((resolve, reject) => {
+        const encodedRoute = encodeRoute('tweets.by.author');
+
+        const map = new Map();
+        map.set(WellKnownMimeType.MESSAGE_RSOCKET_ROUTING, encodedRoute);
+        map.set(WellKnownMimeType.MESSAGE_RSOCKET_AUTHENTICATION, encodeSimpleAuthMetadata("user", "pass"));
+        //map.set(WellKnownMimeType.TEXT_PLAIN, Buffer.from("hello-world-123"));
+        const compositeMetaData = encodeCompositeMetadata(map);
+
         let payloadData = { author: document.getElementById("author-filter").value };
-        // socket provides the rsocket interactions fire/forget, request/response,
-        // request/stream, etc as well as methods to close the socket.
+
         const requester = rsocket.requestChannel(
             {
                 data: Buffer.from(JSON.stringify(payloadData)),
-                metadata: Buffer.from(String.fromCharCode('tweets.by.author'.length) + 'tweets.by.author'),
+                metadata: compositeMetaData,
             },
             1,
             false,
             {
                 onError: error => {
-                    console.log(error);
+                    console.error(error);
                     addErrorMessage("Connection has been closed due to ", error);
                 },
                 onNext: payload => {
-                    console.log(payload.data.toString());
+                    console.log("onNext", payload.data.toString());
                     addMessage(JSON.parse(payload.data.toString()));
-                    //requester.request(1);
                 },
                 onSubscribe: subscription => {
-                    //subscription.request(2147483647);
+                    console.log("onSubscribe", subscription);
                 }
-            });
+            }
+        );
     });
 }
 
